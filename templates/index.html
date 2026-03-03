@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MR Digital – Akquise v2</title>
+    <meta name="description"
+        content="MR Digital Akquise Automatisierung – Leads recherchieren, Emails versenden, Statistiken verfolgen" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-mark">M</div>
+            <div class="logo-info">
+                <span class="logo-brand">MR Digital</span>
+                <span class="logo-ver">Akquise v2</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+            </a>
+            <a class="nav-item" data-tab="campaign" onclick="switchTab('campaign')">
+                <span class="nav-icon">🎯</span><span class="nav-label">Kampagne</span>
+            </a>
+            <a class="nav-item" data-tab="research" onclick="switchTab('research')">
+                <span class="nav-icon">🔍</span><span class="nav-label">Research</span>
+            </a>
+            <a class="nav-item" data-tab="leads" onclick="switchTab('leads')">
+                <span class="nav-icon">🏢</span>
+                <span class="nav-label">Leads</span>
+                <span class="nav-badge" id="badge-leads">0</span>
+            </a>
+            <a class="nav-item" data-tab="emails" onclick="switchTab('emails')">
+                <span class="nav-icon">📧</span>
+                <span class="nav-label">Emails</span>
+                <span class="nav-badge" id="badge-emails">0</span>
+            </a>
+            <a class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+                <span class="nav-icon">⚙️</span><span class="nav-label">Einstellungen</span>
+            </a>
+            <a class="nav-item" data-tab="backup" onclick="switchTab('backup')">
+                <span class="nav-icon">💾</span><span class="nav-label">Backup</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-status" id="scheduler-badge">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Lädt...</span>
+        </div>
+
+        <a href="/logout" class="nav-item"
+            style="margin:12px 16px 16px;border-radius:10px;background:rgba(239,68,68,0.1);color:#f87171;text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;font-weight:500;transition:background 0.2s;"
+            onmouseover="this.style.background='rgba(239,68,68,0.2)'"
+            onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+            <span>🚪</span><span>Ausloggen</span>
+        </a>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <main class="main-content">
+
+        <!-- ── DASHBOARD ── -->
+        <section class="tab-page active" id="tab-dashboard">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-sub" id="dash-date">Heute</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-danger btn-sm" id="btn-stop" onclick="stopScheduler()" style="display:none">⏹
+                        Stopp</button>
+                    <button class="btn btn-primary" id="btn-run" onclick="runNow()">▶ Jetzt senden</button>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-num" id="d-emails-today">0</div>
+                    <div class="stat-lbl">Emails heute</div>
+                    <div class="stat-sub" id="d-limit-sub"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="d-emails-total">0</div>
+                    <div class="stat-lbl">Emails gesamt</div>
+                </div>
+                <div class="stat-card accent">
+                    <div class="stat-num" id="d-leads">0</div>
+                    <div class="stat-lbl">Leads gesamt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="d-replied">0</div>
+                    <div class="stat-lbl">Antworten</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-num" id="d-appointments">0</div>
+                    <div class="stat-lbl">Termine</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="d-errors">0</div>
+                    <div class="stat-lbl">Fehler</div>
+                </div>
+            </div>
+
+            <!-- Activity Chart -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <span class="card-title">📈 Letzte 7 Tage</span>
+                </div>
+                <div class="chart-wrap" id="chart-wrap">
+                    <div class="chart-bars" id="chart-bars"></div>
+                </div>
+            </div>
+
+            <!-- Scheduler Info -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <span class="card-title">⏰ Scheduler</span>
+                </div>
+                <div class="scheduler-info">
+                    <div class="info-row"><span class="info-key">Status</span><span id="sched-status">–</span></div>
+                    <div class="info-row"><span class="info-key">Nächster Versand</span><span id="sched-next">–</span>
+                    </div>
+                    <div class="info-row"><span class="info-key">Letzter Lauf</span><span id="sched-last">–</span></div>
+                    <div class="info-row"><span class="info-key">Ergebnis</span><span id="sched-result">–</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── KAMPAGNE ── -->
+        <section class="tab-page" id="tab-campaign">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">🎯 Kampagne</h1>
+                    <p class="page-sub">Automatisierungs-Einstellungen</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Branche / Nische</label>
+                        <select class="form-input" id="camp-niche"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Zielstädte (kommagetrennt)</label>
+                        <input class="form-input" id="camp-cities" placeholder="München, Berlin, Hamburg" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Emails pro Tag <span class="form-hint"
+                                id="camp-limit-val">30</span></label>
+                        <input class="form-range" type="range" id="camp-limit" min="5" max="50" value="30"
+                            oninput="document.getElementById('camp-limit-val').textContent=this.value" />
+                        <div class="range-labels"><span>5</span><span>50</span></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Versandzeit</label>
+                        <div class="time-row">
+                            <input class="form-input time-in" type="number" id="camp-hour" min="6" max="20" value="9" />
+                            <span class="time-sep">:</span>
+                            <select class="form-input time-in" id="camp-minute">
+                                <option value="0">00</option>
+                                <option value="15">15</option>
+                                <option value="30">30</option>
+                                <option value="45">45</option>
+                            </select>
+                            <span class="time-sep">Uhr</span>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Versandtage</label>
+                        <div class="day-toggles" id="day-toggles">
+                            <button class="day-btn active" data-day="0">Mo</button>
+                            <button class="day-btn active" data-day="1">Di</button>
+                            <button class="day-btn active" data-day="2">Mi</button>
+                            <button class="day-btn active" data-day="3">Do</button>
+                            <button class="day-btn active" data-day="4">Fr</button>
+                            <button class="day-btn" data-day="5">Sa</button>
+                            <button class="day-btn" data-day="6">So</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-footer">
+                    <button class="btn btn-primary" onclick="saveCampaign()">💾 Kampagne speichern</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── RESEARCH ── -->
+        <section class="tab-page" id="tab-research">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">🔍 Research</h1>
+                    <p class="page-sub">Betriebe recherchieren</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Branche / Suchbegriff</label>
+                        <input class="form-input" id="res-query" placeholder="z.B. Elektriker" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stadt <span style="color:var(--text-muted);font-weight:400">(leer =
+                                ganz Deutschland)</span></label>
+                        <input class="form-input" id="res-city" placeholder="z.B. München (optional)" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quelle</label>
+                        <select class="form-input" id="res-source">
+                            <option value="auto">🔄 Automatisch</option>
+                            <option value="gelbeseiten">📒 Gelbe Seiten</option>
+                            <option value="branchenbuch">📖 Branchenbuch</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max. Ergebnisse</label>
+                        <input class="form-input" type="number" id="res-max" value="8" min="3" max="20" />
+                    </div>
+                </div>
+                <div class="form-footer">
+                    <button class="btn btn-primary" id="btn-research" onclick="startResearch()">🔍 Recherche
+                        starten</button>
+                </div>
+            </div>
+
+            <div class="card mt-4" id="res-log-card" style="display:none">
+                <div class="card-header">
+                    <span class="card-title">⚡ Live-Recherche</span>
+                </div>
+                <div class="log-box" id="res-log"></div>
+            </div>
+
+            <div class="card mt-4" id="res-results-card" style="display:none">
+                <div class="card-header">
+                    <span class="card-title">📋 Gefundene Betriebe</span>
+                    <button class="btn btn-sm btn-ghost" onclick="saveAllResearchLeads()">➕ Alle übernehmen</button>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="res-table">
+                        <thead>
+                            <tr>
+                                <th>Unternehmen</th>
+                                <th>Branche</th>
+                                <th>Stadt</th>
+                                <th>Email</th>
+                                <th>Quelle</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="res-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── LEADS ── -->
+        <section class="tab-page" id="tab-leads">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">🏢 Leads</h1>
+                    <p class="page-sub" id="leads-count-info">Alle Kontakte</p>
+                </div>
+                <div class="page-actions">
+                    <select class="form-input form-input-sm" id="filter-status" onchange="loadLeads()">
+                        <option value="">Alle Status</option>
+                        <option value="Neu">Neu</option>
+                        <option value="Kontaktiert">Kontaktiert</option>
+                        <option value="Antwort">Antwort</option>
+                        <option value="Termin">Termin</option>
+                        <option value="Blacklist">Blacklist</option>
+                    </select>
+                    <button class="btn btn-sm btn-ghost" onclick="exportLeads()">⬇ CSV</button>
+                    <button class="btn btn-sm btn-primary" onclick="openAddLeadModal()">➕ Lead hinzufügen</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table class="data-table" id="leads-table">
+                        <thead>
+                            <tr>
+                                <th>Unternehmen</th>
+                                <th>Branche</th>
+                                <th>Stadt</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Kontaktiert</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── EMAILS ── -->
+        <section class="tab-page" id="tab-emails">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">📧 Emails</h1>
+                    <p class="page-sub">Versand-Verlauf</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table class="data-table" id="emails-table">
+                        <thead>
+                            <tr>
+                                <th>Empfänger</th>
+                                <th>Betreff</th>
+                                <th>Status</th>
+                                <th>Gesendet</th>
+                                <th>Vorschau</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emails-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── EINSTELLUNGEN ── -->
+        <section class="tab-page" id="tab-settings">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">⚙️ Einstellungen</h1>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">📧 Gmail SMTP</span></div>
+                    <div class="form-group">
+                        <label class="form-label">Email-Adresse</label>
+                        <input class="form-input" id="set-gmail" type="email" placeholder="info@gmail.com" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">App-Passwort
+                            <a href="https://myaccount.google.com/apppasswords" target="_blank"
+                                class="help-link">Erstellen →</a>
+                        </label>
+                        <input class="form-input" id="set-pw" type="password" placeholder="xxxx xxxx xxxx xxxx" />
+                    </div>
+                    <div class="form-footer gap-2">
+                        <button class="btn btn-ghost btn-sm" onclick="testSmtp()">🔌 Verbindung testen</button>
+                        <button class="btn btn-ghost btn-sm" onclick="sendTestEmail()">📨 Test-Email senden</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><span class="card-title">🏢 Absender & Signatur</span></div>
+                    <div class="form-group">
+                        <label class="form-label">Versendername</label>
+                        <input class="form-input" id="set-name" placeholder="Nicklas Rieger – MR Digital" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefon</label>
+                        <input class="form-input" id="set-phone" placeholder="+49 XXX XXXXXXXXX" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Calendly Buchungslink</label>
+                        <input class="form-input" id="set-calendly" placeholder="https://calendly.com/..." />
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><span class="card-title">📊 Versand-Limits</span></div>
+                    <div class="form-group">
+                        <label class="form-label">Max. Emails pro Tag (empfohlen: 30–50)</label>
+                        <input class="form-input" id="set-limit" type="number" min="5" max="200" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-Backup täglich</label>
+                        <label class="toggle-wrap">
+                            <input type="checkbox" id="set-backup" />
+                            <span class="toggle"></span>
+                            <span>Aktiviert</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer mt-4">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Alle Einstellungen speichern</button>
+            </div>
+
+            <!-- Blacklist -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <span class="card-title">🚫 Blacklist</span>
+                    <button class="btn btn-sm btn-ghost" onclick="openBlacklistAddModal()">➕ Hinzufügen</button>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="blacklist-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Unternehmen</th>
+                                <th>Grund</th>
+                                <th>Hinzugefügt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blacklist-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── BACKUP ── -->
+        <section class="tab-page" id="tab-backup">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">💾 Backup</h1>
+                    <p class="page-sub">Datensicherung</p>
+                </div>
+                <button class="btn btn-primary" onclick="createBackup()">📦 Backup erstellen</button>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table class="data-table" id="backup-table">
+                        <thead>
+                            <tr>
+                                <th>Dateiname</th>
+                                <th>Größe</th>
+                                <th>Erstellt</th>
+                                <th>Download</th>
+                            </tr>
+                        </thead>
+                        <tbody id="backup-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══ MODALS ═══ -->
+
+    <!-- Email-Preview Modal -->
+    <div class="modal-overlay" id="email-modal" onclick="closeModal('email-modal')" style="display:none">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">📧 Email-Vorschau</h3>
+                <button class="modal-close" onclick="closeModal('email-modal')">✕</button>
+            </div>
+            <div class="modal-body" id="email-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Lead hinzufügen Modal -->
+    <div class="modal-overlay" id="add-lead-modal" onclick="closeModal('add-lead-modal')" style="display:none">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width:480px">
+            <div class="modal-header">
+                <h3 class="modal-title">➕ Lead manuell hinzufügen</h3>
+                <button class="modal-close" onclick="closeModal('add-lead-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Firmenname *</label>
+                    <input class="form-input" id="new-lead-name" />
+                </div>
+                <div class="form-group"><label class="form-label">Email *</label>
+                    <input class="form-input" id="new-lead-email" type="email" />
+                </div>
+                <div class="form-group"><label class="form-label">Branche</label>
+                    <input class="form-input" id="new-lead-cat" />
+                </div>
+                <div class="form-group"><label class="form-label">Stadt</label>
+                    <input class="form-input" id="new-lead-city" />
+                </div>
+                <div class="form-group"><label class="form-label">Telefon</label>
+                    <input class="form-input" id="new-lead-phone" />
+                </div>
+                <div class="form-group"><label class="form-label">Website</label>
+                    <input class="form-input" id="new-lead-website" />
+                </div>
+                <div class="form-footer">
+                    <button class="btn btn-primary full-width" onclick="submitNewLead()">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blacklist Add Modal -->
+    <div class="modal-overlay" id="bl-add-modal" onclick="closeModal('bl-add-modal')" style="display:none">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+            <div class="modal-header">
+                <h3 class="modal-title">🚫 Zur Blacklist hinzufügen</h3>
+                <button class="modal-close" onclick="closeModal('bl-add-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Email *</label>
+                    <input class="form-input" id="bl-email" type="email" />
+                </div>
+                <div class="form-group"><label class="form-label">Unternehmen</label>
+                    <input class="form-input" id="bl-company" />
+                </div>
+                <div class="form-group"><label class="form-label">Grund</label>
+                    <input class="form-input" id="bl-reason" value="Abgemeldet" />
+                </div>
+                <div class="form-footer">
+                    <button class="btn btn-danger full-width" onclick="submitBlacklist()">Blacklisten</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
