@@ -354,7 +354,8 @@ def api_get_settings():
     keys = [
         "gmail_address", "gmail_app_password", "calendly_link",
         "sender_name", "sender_phone", "max_emails_per_day",
-        "auto_backup",
+        "auto_backup", "email_subject", "email_template_html",
+        "email_template_text",
     ]
     result = {}
     for k in keys:
@@ -374,6 +375,7 @@ def api_save_settings():
     allowed = [
         "gmail_address", "gmail_app_password", "calendly_link",
         "sender_name", "sender_phone", "max_emails_per_day", "auto_backup",
+        "email_subject", "email_template_html", "email_template_text",
     ]
     for key in allowed:
         if key in data and data[key] and data[key] != "••••••••••••••••":

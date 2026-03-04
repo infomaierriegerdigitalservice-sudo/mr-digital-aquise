@@ -409,6 +409,9 @@ async function loadSettings() {
     setVal('set-phone', s.sender_phone || '');
     setVal('set-calendly', s.calendly_link || '');
     setVal('set-limit', s.max_emails_per_day || '30');
+    setVal('set-subject', s.email_subject || '');
+    setVal('set-tmpl-html', s.email_template_html || '');
+    setVal('set-tmpl-text', s.email_template_text || '');
     const cb = document.getElementById('set-backup');
     if (cb) cb.checked = (s.auto_backup !== 'false');
 }
@@ -422,6 +425,9 @@ async function saveSettings() {
         calendly_link: getVal('set-calendly'),
         max_emails_per_day: getVal('set-limit'),
         auto_backup: document.getElementById('set-backup')?.checked ? 'true' : 'false',
+        email_subject: getVal('set-subject'),
+        email_template_html: getVal('set-tmpl-html'),
+        email_template_text: getVal('set-tmpl-text'),
     };
     const r = await postJson('/api/settings/save', data);
     toast(r.message, r.ok ? 'success' : 'error');

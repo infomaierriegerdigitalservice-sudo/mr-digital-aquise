@@ -138,8 +138,6 @@ def _scrape_gelbeseiten(category: str, city: str = "", max_results: int = 10) ->
                 
                 if not email and website:
                     email = _estimate_email_from_website(website)
-                if not email:
-                    email = _estimate_email(name)
 
                 results.append({
                     "name": name,
@@ -209,7 +207,7 @@ def _scrape_branchenbuch(category: str, city: str = "", max_results: int = 10) -
                 if web_el:
                     website = web_el.get("href", "")
 
-                email = _estimate_email_from_website(website) if website else _estimate_email(name)
+                email = _estimate_email_from_website(website) if website else ""
 
                 results.append({
                     "name": name,
@@ -317,15 +315,6 @@ def research_stream(query: str, city: str = "", source: str = "auto",
 # ──────────────────────────────────────
 # HILFSFUNKTIONEN
 # ──────────────────────────────────────
-
-def _estimate_email(name: str) -> str:
-    clean = re.sub(r"[^a-zA-Z0-9äöüÄÖÜ ]", "", name).lower().strip()
-    clean = clean.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
-    clean = re.sub(r"[^a-z0-9 ]", "", clean)
-    words = clean.split()
-    domain = words[0][:20] if words else "info"
-    return f"info@{domain}.de"
-
 
 def _estimate_email_from_website(website: str) -> str:
     try:

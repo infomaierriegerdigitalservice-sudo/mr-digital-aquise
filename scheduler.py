@@ -24,10 +24,11 @@ SCHEDULER_STATUS = {
 
 def _run_daily_campaign():
     """Führt die tägliche Akquise-Kampagne aus."""
-    from data_store import get_all_leads, get_active_campaign, count_emails_today, get_setting
+    from data_store import get_all_leads, get_active_campaign, count_emails_today, get_setting, save_lead
     from email_generator import generate_email
     from mailer import send_email
     from backup import create_backup
+    from researcher import research_sync
 
     SCHEDULER_STATUS["running"] = True
     SCHEDULER_STATUS["last_run"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -40,6 +41,24 @@ def _run_daily_campaign():
         SCHEDULER_STATUS["running"] = False
         SCHEDULER_STATUS["last_result"] = "Keine aktive Kampagne"
         return
+
+    # Auto-Research vor dem Versand
+    try:
+        niche = campaign.get("niche", "Handwerk")
+        cities_str = campaign.get("cities", "")
+        cities = [c.strip() for c in cities_str.split(",") if c.strip()]
+        if not cities:
+            cities = [""]
+        for city in cities:
+            logger.info(f"[Scheduler] Automatische Recherche: {niche} in {city or 'Deutschland'}")
+            new_leads = research_sync(niche, city, source="auto", max_results=20)
+            for lead in new_leads:
+                # Nur speichern wenn Email gefunden wurde (wir wollen ja Emails raussenden)
+                if lead.get("email"):
+                    lead["source"] = "Auto-Research"
+                    save_lead(lead)
+    except Exception as e:
+        logger.warning(f"[Scheduler] Auto-Research Fehler: {e}")
 
     max_today = int(get_setting("max_emails_per_day") or campaign.get("emails_per_day", 30))
     sent_today = count_emails_today()

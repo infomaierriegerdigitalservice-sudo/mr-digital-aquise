@@ -102,36 +102,40 @@ def generate_email(lead: dict) -> dict:
     if rating and rating.strip():
         rating_phrase = f"Ihre {rating} sprechen für sich – genau solche vertrauenswürdigen Betriebe sind unsere Lieblingskunden."
 
-    subject = f"Automatisierung für {company} – 15 Min. kostenlose Analyse"
+    subject_tmpl = get_setting("email_subject")
+    if not subject_tmpl:
+        subject_tmpl = "Automatisierung für {company} – 15 Min. kostenlose Analyse"
 
-    body_html = f"""<!DOCTYPE html>
+    html_tmpl = get_setting("email_template_html")
+    if not html_tmpl:
+        html_tmpl = f"""<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="UTF-8"></head>
 <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
 
-<p>Sehr geehrte Damen und Herren von <strong>{company}</strong>,</p>
+<p>Sehr geehrte Damen und Herren von <strong>{{company}}</strong>,</p>
 
-<p>mein Name ist <strong>{sender_name}</strong>, Gründer von 
-<a href="{WEBSITE}" style="color: #6366f1;">MR DigitalServices</a>. 
+<p>mein Name ist <strong>{{sender_name}}</strong>, Gründer von 
+<a href="{{website}}" style="color: #6366f1;">MR DigitalServices</a>. 
 Ich bin auf Ihr Unternehmen aufmerksam geworden und sehe großes Potenzial.</p>
 
-<p>Viele <strong>{niche}-Betriebe {city_phrase}</strong> verlieren täglich Zeit, weil sie 
-<strong>{pain_data['pain']}</strong>. Das muss nicht so sein.</p>
+<p>Viele <strong>{{niche}}-Betriebe {{city_phrase}}</strong> verlieren täglich Zeit, weil sie 
+<strong>{{pain}}</strong>. Das muss nicht so sein.</p>
 
-<p>Wir helfen handwerklichen Betrieben dabei, <strong>{pain_data['benefit']}</strong> – 
+<p>Wir helfen handwerklichen Betrieben dabei, <strong>{{benefit}}</strong> – 
 ohne technisches Vorwissen, ohne teure Software.</p>
 
-<p>Unsere Kunden sparen im Durchschnitt <strong>{pain_data['time_save']} täglich</strong> 
+<p>Unsere Kunden sparen im Durchschnitt <strong>{{time_save}} täglich</strong> 
 – Zeit, die sie für ihre eigentliche Arbeit nutzen können.</p>
 
 {f'<p><em>{rating_phrase}</em></p>' if rating_phrase else ''}
 
 <p>Ich würde Ihnen gerne in einem unverbindlichen <strong>15-Minuten-Gespräch</strong> 
-zeigen, welche Prozesse bei <strong>{company}</strong> am schnellsten automatisiert 
+zeigen, welche Prozesse bei <strong>{{company}}</strong> am schnellsten automatisiert 
 werden können – kostenlos und ohne Verpflichtung.</p>
 
 <p style="text-align: center; margin: 30px 0;">
-  <a href="{calendly}" 
+  <a href="{{calendly}}" 
      style="background: #6366f1; color: white; padding: 12px 28px; border-radius: 8px; 
             text-decoration: none; font-weight: bold; display: inline-block;">
     👉 Kostenloses Erstgespräch buchen
@@ -143,17 +147,17 @@ werden können – kostenlos und ohne Verpflichtung.</p>
 <table style="border-top: 2px solid #6366f1; padding-top: 16px; margin-top: 8px;">
 <tr>
   <td>
-    <strong style="color: #6366f1;">{sender_name}</strong><br>
-    <em>{sender_phone}</em><br>
-    <a href="{WEBSITE}" style="color: #6366f1;">{WEBSITE}</a><br>
-    <a href="{calendly}" style="color: #888; font-size: 12px;">Termin buchen</a>
+    <strong style="color: #6366f1;">{{sender_name}}</strong><br>
+    <em>{{sender_phone}}</em><br>
+    <a href="{{website}}" style="color: #6366f1;">{{website}}</a><br>
+    <a href="{{calendly}}" style="color: #888; font-size: 12px;">Termin buchen</a>
   </td>
 </tr>
 </table>
 
 <hr style="border: none; border-top: 1px solid #eee; margin-top: 40px;">
 <p style="font-size: 11px; color: #999; text-align: center;">
-  MR DigitalServices · {WEBSITE} · {sender_phone}<br>
+  MR DigitalServices · {{website}} · {{sender_phone}}<br>
   Sie erhalten diese Email, weil wir Ihr Unternehmen auf Google Maps gefunden haben.<br>
   <a href="http://localhost:5001/unsubscribe?email={lead.get('email', '')}" 
      style="color: #999;">Abmelden / Unsubscribe</a>
@@ -161,26 +165,44 @@ werden können – kostenlos und ohne Verpflichtung.</p>
 </body>
 </html>"""
 
-    body_text = f"""Sehr geehrte Damen und Herren von {company},
+    text_tmpl = get_setting("email_template_text")
+    if not text_tmpl:
+        text_tmpl = f"""Sehr geehrte Damen und Herren von {{company}},
 
-mein Name ist {sender_name}, Gründer von MR DigitalServices.
+mein Name ist {{sender_name}}, Gründer von MR DigitalServices.
 
-Viele {niche}-Betriebe {city_phrase} verlieren täglich Zeit, weil sie
-{pain_data['pain']}.
+Viele {{niche}}-Betriebe {{city_phrase}} verlieren täglich Zeit, weil sie
+{{pain}}.
 
-Wir helfen dabei, {pain_data['benefit']} – ohne technisches Vorwissen.
+Wir helfen dabei, {{benefit}} – ohne technisches Vorwissen.
 
-Unsere Kunden sparen im Durchschnitt {pain_data['time_save']} täglich.
+Unsere Kunden sparen im Durchschnitt {{time_save}} täglich.
 
-Kostenloses 15-Min-Gespräch buchen: {calendly}
+Kostenloses 15-Min-Gespräch buchen: {{calendly}}
 
 Mit freundlichen Grüßen,
-{sender_name}
-{WEBSITE} | {sender_phone}
+{{sender_name}}
+{{website}} | {{sender_phone}}
 
 ---
 Abmelden: http://localhost:5001/unsubscribe?email={lead.get('email', '')}
 """
+
+    def _replace_vars(text: str) -> str:
+        return text.replace("{company}", company)\
+                   .replace("{niche}", niche)\
+                   .replace("{city_phrase}", city_phrase)\
+                   .replace("{pain}", pain_data['pain'])\
+                   .replace("{benefit}", pain_data['benefit'])\
+                   .replace("{time_save}", pain_data['time_save'])\
+                   .replace("{sender_name}", sender_name)\
+                   .replace("{sender_phone}", sender_phone)\
+                   .replace("{calendly}", calendly)\
+                   .replace("{website}", WEBSITE)
+
+    subject = _replace_vars(subject_tmpl)
+    body_html = _replace_vars(html_tmpl)
+    body_text = _replace_vars(text_tmpl)
 
     return {
         "lead_id": lead.get("id"),
