@@ -89,6 +89,7 @@ def generate_email(lead: dict) -> dict:
     calendly = get_setting("calendly_link") or CALENDLY_LINK
     sender_name = get_setting("sender_name") or SENDER_NAME
     sender_phone = get_setting("sender_phone") or PHONE
+    sender_email = get_setting("gmail_address") or "info.maier.rieger.digitalservice@gmail.com"
 
     niche = lead.get("category", "Handwerk")
     pain_data = NICHE_PAIN_POINTS.get(niche, DEFAULT_PAIN)
@@ -140,8 +141,10 @@ def generate_email(lead: dict) -> dict:
 <p>
   <strong>{{sender_name}}</strong><br>
   <em>MR DigitalServices</em><br>
+  E-Mail: <a href="mailto:{{sender_email}}" style="color: #2563eb;">{{sender_email}}</a><br>
   Tel: {{sender_phone}}<br>
-  Web: <a href="{{website}}" style="color: #2563eb;">{{website}}</a>
+  Web: <a href="{{website}}" style="color: #2563eb;">{{website}}</a><br>
+  Terminbuchung: <a href="{{calendly}}" style="color: #2563eb;">{{calendly}}</a>
 </p>
 
 <hr style="border: none; border-top: 1px solid #eee; margin-top: 40px;">
@@ -174,8 +177,10 @@ Mit besten Grüßen,
 
 {{sender_name}}
 MR DigitalServices
+E-Mail: {{sender_email}}
 Tel: {{sender_phone}}
 Web: {{website}}
+Terminbuchung: {{calendly}}
 
 ---
 Abmelden: http://localhost:5001/unsubscribe?email={lead.get('email', '')}
@@ -190,6 +195,7 @@ Abmelden: http://localhost:5001/unsubscribe?email={lead.get('email', '')}
                    .replace("{time_save}", pain_data['time_save'])\
                    .replace("{sender_name}", sender_name)\
                    .replace("{sender_phone}", sender_phone)\
+                   .replace("{sender_email}", sender_email)\
                    .replace("{calendly}", calendly)\
                    .replace("{website}", WEBSITE)
 
@@ -241,8 +247,10 @@ def get_raw_templates() -> dict:
 <p>
   <strong>{sender_name}</strong><br>
   <em>MR DigitalServices</em><br>
+  E-Mail: <a href="mailto:{sender_email}" style="color: #2563eb;">{sender_email}</a><br>
   Tel: {sender_phone}<br>
-  Web: <a href="{website}" style="color: #2563eb;">{website}</a>
+  Web: <a href="{website}" style="color: #2563eb;">{website}</a><br>
+  Terminbuchung: <a href="{calendly}" style="color: #2563eb;">{calendly}</a>
 </p>
 
 <hr style="border: none; border-top: 1px solid #eee; margin-top: 40px;">
@@ -273,8 +281,10 @@ Mit besten Grüßen,
 
 {sender_name}
 MR DigitalServices
+E-Mail: {sender_email}
 Tel: {sender_phone}
 Web: {website}
+Terminbuchung: {calendly}
 
 ---
 Abmelden: http://localhost:5001/unsubscribe?email={email}
