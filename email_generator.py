@@ -104,7 +104,7 @@ def generate_email(lead: dict) -> dict:
 
     subject_tmpl = get_setting("email_subject")
     if not subject_tmpl:
-        subject_tmpl = "Automatisierung für {company} – 15 Min. kostenlose Analyse"
+        subject_tmpl = "Potenzial für {company} – Mehr Zeit durch smarte Automatisierung"
 
     html_tmpl = get_setting("email_template_html")
     if not html_tmpl:
@@ -115,52 +115,41 @@ def generate_email(lead: dict) -> dict:
 
 <p>Sehr geehrte Damen und Herren von <strong>{{company}}</strong>,</p>
 
-<p>mein Name ist <strong>{{sender_name}}</strong>, Gründer von 
-<a href="{{website}}" style="color: #6366f1;">MR DigitalServices</a>. 
-Ich bin auf Ihr Unternehmen aufmerksam geworden und sehe großes Potenzial.</p>
-
-<p>Viele <strong>{{niche}}-Betriebe {{city_phrase}}</strong> verlieren täglich Zeit, weil sie 
-<strong>{{pain}}</strong>. Das muss nicht so sein.</p>
-
-<p>Wir helfen handwerklichen Betrieben dabei, <strong>{{benefit}}</strong> – 
-ohne technisches Vorwissen, ohne teure Software.</p>
-
-<p>Unsere Kunden sparen im Durchschnitt <strong>{{time_save}} täglich</strong> 
-– Zeit, die sie für ihre eigentliche Arbeit nutzen können.</p>
+<p>mein Name ist <strong>{{sender_name}}</strong> von MR DigitalServices. Ich bin bei Recherchen {{city_phrase}} auf Ihr Unternehmen aufmerksam geworden und Ihr Profil hat mich direkt angesprochen.</p>
 
 {f'<p><em>{rating_phrase}</em></p>' if rating_phrase else ''}
 
-<p>Ich würde Ihnen gerne in einem unverbindlichen <strong>15-Minuten-Gespräch</strong> 
-zeigen, welche Prozesse bei <strong>{{company}}</strong> am schnellsten automatisiert 
-werden können – kostenlos und ohne Verpflichtung.</p>
+<p>Aus der Zusammenarbeit mit anderen {{niche}}-Betrieben wissen wir, dass oft im Hintergrund viel Zeit verloren geht – speziell wenn es darum geht, <strong>{{pain}}</strong>. Genau hier lässt sich durch simple Automatisierungen massiv Zeit einsparen.</p>
 
-<p style="text-align: center; margin: 30px 0;">
+<p>Wir haben uns darauf spezialisiert, genau solche Prozesse reibungslos zu digitalisieren, sodass Sie <strong>{{benefit}}</strong>. Unsere Kunden sparen dadurch oft über <strong>{{time_save}}</strong> ein, die direkt wieder in produktive Arbeit oder Freizeit fließen können.</p>
+
+<p>Ohne technisches Vorwissen für Sie umsetzbar. Ich zeige Ihnen gerne in einem kostenfreien, 15-minütigen Gespräch via Google Meet oder Zoom, wie einfach das für <strong>{{company}}</strong> aussehen kann.</p>
+
+<p style="text-align: left; margin: 25px 0;">
   <a href="{{calendly}}" 
-     style="background: #6366f1; color: white; padding: 12px 28px; border-radius: 8px; 
+     style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; 
             text-decoration: none; font-weight: bold; display: inline-block;">
-    👉 Kostenloses Erstgespräch buchen
+    👉 Zum Kalender: Kostenfreies Erstgespräch wählen
   </a>
 </p>
 
-<p>Mit freundlichen Grüßen,</p>
+<p>Ich freue mich auf unseren Austausch.</p>
 
-<table style="border-top: 2px solid #6366f1; padding-top: 16px; margin-top: 8px;">
-<tr>
-  <td>
-    <strong style="color: #6366f1;">{{sender_name}}</strong><br>
-    <em>{{sender_phone}}</em><br>
-    <a href="{{website}}" style="color: #6366f1;">{{website}}</a><br>
-    <a href="{{calendly}}" style="color: #888; font-size: 12px;">Termin buchen</a>
-  </td>
-</tr>
-</table>
+<p>Mit besten Grüßen,</p>
+
+<p>
+  <strong>{{sender_name}}</strong><br>
+  <em>MR DigitalServices</em><br>
+  Tel: {{sender_phone}}<br>
+  Web: <a href="{{website}}" style="color: #2563eb;">{{website}}</a>
+</p>
 
 <hr style="border: none; border-top: 1px solid #eee; margin-top: 40px;">
 <p style="font-size: 11px; color: #999; text-align: center;">
-  MR DigitalServices · {{website}} · {{sender_phone}}<br>
-  Sie erhalten diese Email, weil wir Ihr Unternehmen auf Google Maps gefunden haben.<br>
+  MR DigitalServices · {{website}}<br>
+  Sie erhalten diese E-Mail, da Ihr Unternehmen online öffentlich verzeichnet ist.<br>
   <a href="http://localhost:5001/unsubscribe?email={lead.get('email', '')}" 
-     style="color: #999;">Abmelden / Unsubscribe</a>
+     style="color: #999;">Keine weiteren E-Mails erhalten</a>
 </p>
 </body>
 </html>"""
@@ -169,20 +158,24 @@ werden können – kostenlos und ohne Verpflichtung.</p>
     if not text_tmpl:
         text_tmpl = f"""Sehr geehrte Damen und Herren von {{company}},
 
-mein Name ist {{sender_name}}, Gründer von MR DigitalServices.
+mein Name ist {{sender_name}} von MR DigitalServices. Ich bin bei Recherchen {{city_phrase}} auf Ihr Unternehmen aufmerksam geworden.
 
-Viele {{niche}}-Betriebe {{city_phrase}} verlieren täglich Zeit, weil sie
-{{pain}}.
+Aus der Zusammenarbeit mit anderen {{niche}}-Betrieben wissen wir, dass oft viel Zeit verloren geht, speziell wenn es darum geht, {{pain}}.
 
-Wir helfen dabei, {{benefit}} – ohne technisches Vorwissen.
+Wir haben uns darauf spezialisiert, genau solche Prozesse zu digitalisieren, sodass Sie {{benefit}}. Unsere Kunden sparen dadurch oft über {{time_save}} ein.
 
-Unsere Kunden sparen im Durchschnitt {{time_save}} täglich.
+Ich zeige Ihnen gerne in einem kostenfreien 15-minütigen Gespräch via Google Meet, wie einfach das für {{company}} aussehen kann.
 
-Kostenloses 15-Min-Gespräch buchen: {{calendly}}
+Zum Kalender (Termin wählen): {{calendly}}
 
-Mit freundlichen Grüßen,
+Ich freue mich auf unseren Austausch.
+
+Mit besten Grüßen,
+
 {{sender_name}}
-{{website}} | {{sender_phone}}
+MR DigitalServices
+Tel: {{sender_phone}}
+Web: {{website}}
 
 ---
 Abmelden: http://localhost:5001/unsubscribe?email={lead.get('email', '')}
