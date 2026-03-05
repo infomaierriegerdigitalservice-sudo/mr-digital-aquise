@@ -219,6 +219,11 @@ def _scrape_gelbeseiten(category: str, city: str = "", max_results: int = 10) ->
                         if params_str:
                             params = json.loads(params_str)
                             em = params.get("generic", {}).get("email", "")
+                            if em:
+                                email = em
+                    except Exception:
+                        pass
+
                 # E-Mail von der Website scrapen, falls sonst nicht gefunden
                 if not email and website:
                     email = _scrape_email_from_website(website)
@@ -234,9 +239,6 @@ def _scrape_gelbeseiten(category: str, city: str = "", max_results: int = 10) ->
                     "rating": "",
                     "source": "Gelbe Seiten",
                 })
-            except Exception as ex:
-                logger.debug(f"[Research] Karte überspringen: {ex}")
-                continue
             except Exception as ex:
                 logger.debug(f"[Research] Karte überspringen: {ex}")
                 continue
