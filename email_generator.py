@@ -205,3 +205,84 @@ Abmelden: http://localhost:5001/unsubscribe?email={lead.get('email', '')}
         "body_html": body_html,
         "body_text": body_text,
     }
+
+
+def get_raw_templates() -> dict:
+    """Gibt die unformatierten Standard-Templates zurück, z.B. für das Frontend-Dashboard."""
+    subject = "Potenzial für {company} – Mehr Zeit durch smarte Automatisierung"
+    
+    html = """<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+
+<p>Sehr geehrte Damen und Herren von <strong>{company}</strong>,</p>
+
+<p>mein Name ist <strong>{sender_name}</strong> von MR DigitalServices. Ich bin bei Recherchen {city_phrase} auf Ihr Unternehmen aufmerksam geworden und Ihr Profil hat mich direkt angesprochen.</p>
+
+<p>Aus der Zusammenarbeit mit anderen {niche}-Betrieben wissen wir, dass oft im Hintergrund viel Zeit verloren geht – speziell wenn es darum geht, <strong>{pain}</strong>. Genau hier lässt sich durch simple Automatisierungen massiv Zeit einsparen.</p>
+
+<p>Wir haben uns darauf spezialisiert, genau solche Prozesse reibungslos zu digitalisieren, sodass Sie <strong>{benefit}</strong>. Unsere Kunden sparen dadurch oft über <strong>{time_save}</strong> ein, die direkt wieder in produktive Arbeit oder Freizeit fließen können.</p>
+
+<p>Ohne technisches Vorwissen für Sie umsetzbar. Ich zeige Ihnen gerne in einem kostenfreien, 15-minütigen Gespräch via Google Meet oder Zoom, wie einfach das für <strong>{company}</strong> aussehen kann.</p>
+
+<p style="text-align: left; margin: 25px 0;">
+  <a href="{calendly}" 
+     style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; 
+            text-decoration: none; font-weight: bold; display: inline-block;">
+    👉 Zum Kalender: Kostenfreies Erstgespräch wählen
+  </a>
+</p>
+
+<p>Ich freue mich auf unseren Austausch.</p>
+
+<p>Mit besten Grüßen,</p>
+
+<p>
+  <strong>{sender_name}</strong><br>
+  <em>MR DigitalServices</em><br>
+  Tel: {sender_phone}<br>
+  Web: <a href="{website}" style="color: #2563eb;">{website}</a>
+</p>
+
+<hr style="border: none; border-top: 1px solid #eee; margin-top: 40px;">
+<p style="font-size: 11px; color: #999; text-align: center;">
+  MR DigitalServices · {website}<br>
+  Sie erhalten diese E-Mail, da Ihr Unternehmen online öffentlich verzeichnet ist.<br>
+  <a href="http://localhost:5001/unsubscribe?email={email}" 
+     style="color: #999;">Keine weiteren E-Mails erhalten</a>
+</p>
+</body>
+</html>"""
+
+    text = """Sehr geehrte Damen und Herren von {company},
+
+mein Name ist {sender_name} von MR DigitalServices. Ich bin bei Recherchen {city_phrase} auf Ihr Unternehmen aufmerksam geworden.
+
+Aus der Zusammenarbeit mit anderen {niche}-Betrieben wissen wir, dass oft viel Zeit verloren geht, speziell wenn es darum geht, {pain}.
+
+Wir haben uns darauf spezialisiert, genau solche Prozesse zu digitalisieren, sodass Sie {benefit}. Unsere Kunden sparen dadurch oft über {time_save} ein.
+
+Ich zeige Ihnen gerne in einem kostenfreien 15-minütigen Gespräch via Google Meet, wie einfach das für {company} aussehen kann.
+
+Zum Kalender (Termin wählen): {calendly}
+
+Ich freue mich auf unseren Austausch.
+
+Mit besten Grüßen,
+
+{sender_name}
+MR DigitalServices
+Tel: {sender_phone}
+Web: {website}
+
+---
+Abmelden: http://localhost:5001/unsubscribe?email={email}
+"""
+
+    return {
+        "subject": subject,
+        "html": html,
+        "text": text,
+    }
+

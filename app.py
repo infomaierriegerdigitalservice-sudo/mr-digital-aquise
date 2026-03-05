@@ -365,6 +365,17 @@ def api_get_settings():
             result[k] = "••••••••••••••••" if len(val) > 4 else ""
         else:
             result[k] = val or ""
+            
+    # Falls keine Templates gespeichert sind, liefern wir die unersetzten Roh-Vorlagen aus `email_generator.py` als Fallback
+    from email_generator import get_raw_templates
+    raw_templates = get_raw_templates()
+    if not result.get("email_subject"):
+        result["email_subject"] = raw_templates["subject"]
+    if not result.get("email_template_html"):
+        result["email_template_html"] = raw_templates["html"]
+    if not result.get("email_template_text"):
+        result["email_template_text"] = raw_templates["text"]
+        
     return jsonify(result)
 
 
