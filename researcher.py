@@ -15,6 +15,7 @@ import logging
 import requests
 import base64
 import json
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,85 @@ HEADERS_POOL = [
         "Connection": "keep-alive",
     },
 ]
+
+
+# ──────────────────────────────────────
+# WEBSITE SCRAPER (E-Mails von Webseite)
+# ──────────────────────────────────────
+
+def _scrape_email_from_website(website_url: str) -> str:
+    """Extrahiert die E-Mail-Adresse direkt von der Webseite (Home & Impressum/Kontakt)."""
+    if not website_url or not website_url.startswith("http"):
+        return ""
+    
+    headers = random.choice(HEADERS_POOL)
+    emails_found = set()
+    
+    # regex for basic email validation
+    email_pattern = re.compile(r'[\w\.-]+@[\w\.-]+\.\w+')
+    
+    try:
+        # Home Page prüfen
+        resp = requests.get(website_url, headers=headers, timeout=10, verify=False)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            # 1. nach mailto-Links suchen
+            for a in soup.select('a[href^="mailto:"]'):
+                em = a['href'].replace('mailto:', '').split('?')[0].strip()
+                if email_pattern.match(em):
+                    emails_found.add(em.lower())
+            
+            # 2. Text-Suche fallback
+            text = soup.get_text()
+            matches = email_pattern.findall(text)
+            for em in matches:
+                if not any(x in em.lower() for x in ['.png', '.jpg', '.gif', 'sentry', '@example']):
+                    emails_found.add(em.lower())
+
+            # Wenn wir schon Info-Mails haben, nehmen wir direkt eine
+            best_emails = [e for e in emails_found if 'info@' in e or 'kontakt@' in e]
+            if best_emails:
+                return best_emails[0]
+            if emails_found:
+                return list(emails_found)[0]
+
+            # Kontakt/Impressum Links suchen
+            paths_to_check = []
+            for a in soup.find_all('a', href=True):
+                href = a['href'].lower()
+                if 'impressum' in href or 'kontakt' in href:
+                    full_url = urljoin(website_url, a['href'])
+                    if full_url not in paths_to_check and full_url.startswith('http'):
+                        paths_to_check.append(full_url)
+            
+            # Impressum / Kontakt prüfen
+            for url in paths_to_check[:2]:
+                try:
+                    r2 = requests.get(url, headers=headers, timeout=10, verify=False)
+                    if r2.status_code == 200:
+                        s2 = BeautifulSoup(r2.text, 'html.parser')
+                        for a in s2.select('a[href^="mailto:"]'):
+                            em = a['href'].replace('mailto:', '').split('?')[0].strip()
+                            if email_pattern.match(em):
+                                emails_found.add(em.lower())
+                        matches = email_pattern.findall(s2.get_text())
+                        for em in matches:
+                            if not any(x in em.lower() for x in ['.png', '.jpg', '.gif', 'sentry', '@example']):
+                                emails_found.add(em.lower())
+                except Exception:
+                    continue
+
+    except Exception as e:
+        logger.debug(f"[Research] Website Scrape Error ({website_url}): {e}")
+
+    # Priorisiere info/kontakt emails
+    best_emails = [e for e in emails_found if 'info@' in e or 'kontakt@' in e]
+    if best_emails:
+        return best_emails[0]
+    elif emails_found:
+        return list(emails_found)[0]
+    
+    return ""
 
 
 # ──────────────────────────────────────
@@ -131,10 +211,9 @@ def _scrape_gelbeseiten(category: str, city: str = "", max_results: int = 10) ->
                         if params_str:
                             params = json.loads(params_str)
                             em = params.get("generic", {}).get("email", "")
-                            if em:
-                                email = em
-                    except Exception:
-                        pass
+                # E-Mail von der Website scrapen, falls sonst nicht gefunden
+                if not email and website:
+                    email = _scrape_email_from_website(website)
 
                 results.append({
                     "name": name,
@@ -147,6 +226,9 @@ def _scrape_gelbeseiten(category: str, city: str = "", max_results: int = 10) ->
                     "rating": "",
                     "source": "Gelbe Seiten",
                 })
+            except Exception as ex:
+                logger.debug(f"[Research] Karte überspringen: {ex}")
+                continue
             except Exception as ex:
                 logger.debug(f"[Research] Karte überspringen: {ex}")
                 continue
@@ -204,7 +286,9 @@ def _scrape_branchenbuch(category: str, city: str = "", max_results: int = 10) -
                 if web_el:
                     website = web_el.get("href", "")
 
-                email = ""  # We only use real emails, never guess
+                email = ""
+                if website:
+                    email = _scrape_email_from_website(website)
 
                 results.append({
                     "name": name,
