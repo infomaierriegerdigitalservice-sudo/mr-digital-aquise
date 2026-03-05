@@ -83,7 +83,12 @@ def init_db():
             created_at  TEXT
         );
         """)
-
+        
+        # Einmaliger Auto-Cleanup von fälschlich generierten Emails aus vorherigen Versionen
+        try:
+            conn.execute("DELETE FROM leads WHERE status = 'Neu' AND email LIKE 'info@%' AND source != 'Manuell'")
+        except Exception as e:
+            pass
 
 # ──────────────────────────────────────
 # LEADS

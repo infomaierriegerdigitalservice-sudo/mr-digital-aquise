@@ -135,9 +135,6 @@ def _scrape_gelbeseiten(category: str, city: str = "", max_results: int = 10) ->
                                 email = em
                     except Exception:
                         pass
-                
-                if not email and website:
-                    email = _estimate_email_from_website(website)
 
                 results.append({
                     "name": name,
@@ -207,7 +204,7 @@ def _scrape_branchenbuch(category: str, city: str = "", max_results: int = 10) -
                 if web_el:
                     website = web_el.get("href", "")
 
-                email = _estimate_email_from_website(website) if website else ""
+                email = ""  # We only use real emails, never guess
 
                 results.append({
                     "name": name,
@@ -312,15 +309,4 @@ def research_stream(query: str, city: str = "", source: str = "auto",
     }
 
 
-# ──────────────────────────────────────
-# HILFSFUNKTIONEN
-# ──────────────────────────────────────
 
-def _estimate_email_from_website(website: str) -> str:
-    try:
-        domain = re.sub(r"https?://(www\.)?", "", website).split("/")[0]
-        if domain and "." in domain:
-            return f"info@{domain}"
-    except Exception:
-        pass
-    return ""
