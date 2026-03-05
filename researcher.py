@@ -15,8 +15,11 @@ import logging
 import requests
 import base64
 import json
+import urllib3
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +57,12 @@ def _scrape_email_from_website(website_url: str) -> str:
     
     try:
         # Home Page prüfen
-        resp = requests.get(website_url, headers=headers, timeout=10, verify=False)
+        try:
+            resp = requests.get(website_url, headers=headers, timeout=8, verify=False)
+        except Exception as e:
+            logger.debug(f"[Research] Website {website_url} offline oder blockiert: {e}")
+            return ""
+
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, 'html.parser')
             # 1. nach mailto-Links suchen
@@ -89,7 +97,7 @@ def _scrape_email_from_website(website_url: str) -> str:
             # Impressum / Kontakt prüfen
             for url in paths_to_check[:2]:
                 try:
-                    r2 = requests.get(url, headers=headers, timeout=10, verify=False)
+                    r2 = requests.get(url, headers=headers, timeout=8, verify=False)
                     if r2.status_code == 200:
                         s2 = BeautifulSoup(r2.text, 'html.parser')
                         for a in s2.select('a[href^="mailto:"]'):
