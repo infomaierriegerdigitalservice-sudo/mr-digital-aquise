@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from config import (
     GMAIL_ADDRESS, GMAIL_APP_PASSWORD, SMTP_HOST, SMTP_PORT,
-    SENDER_NAME, MAX_EMAILS_PER_DAY, SEND_DELAY_SECONDS
+    SENDER_NAME, MAX_EMAILS_PER_DAY, SEND_DELAY_SECONDS, WEBSITE
 )
 from data_store import (
     save_email_sent, update_lead_status, count_emails_today,
@@ -113,7 +113,8 @@ def _send(to_addr: str, to_name: str, subject: str, body_html: str,
     msg["Reply-To"] = addr
 
     # Unsubscribe-Header (DSGVO-konform)
-    unsubscribe_url = f"http://localhost:5001/unsubscribe?email={to_addr}"
+    base_url = get_setting("app_url") or WEBSITE
+    unsubscribe_url = f"{base_url}/unsubscribe?email={to_addr}"
     msg["List-Unsubscribe"] = f"<{unsubscribe_url}>"
 
     if body_text:

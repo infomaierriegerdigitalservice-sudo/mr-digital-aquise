@@ -151,7 +151,7 @@ def generate_email(lead: dict) -> dict:
 <p style="font-size: 11px; color: #999; text-align: center;">
   MR DigitalServices · {{website}}<br>
   Sie erhalten diese E-Mail, da Ihr Unternehmen online öffentlich verzeichnet ist.<br>
-  <a href="http://localhost:5001/unsubscribe?email={lead.get('email', '')}" 
+  <a href="{{website}}/unsubscribe?email={lead.get('email', '')}" 
      style="color: #999;">Keine weiteren E-Mails erhalten</a>
 </p>
 </body>
@@ -183,7 +183,7 @@ Web: {{website}}
 Terminbuchung: {{calendly}}
 
 ---
-Abmelden: http://localhost:5001/unsubscribe?email={lead.get('email', '')}
+Abmelden: {{website}}/unsubscribe?email={lead.get('email', '')}
 """
 
     def _replace_vars(text: str) -> str:
@@ -257,7 +257,7 @@ def get_raw_templates() -> dict:
 <p style="font-size: 11px; color: #999; text-align: center;">
   MR DigitalServices · {website}<br>
   Sie erhalten diese E-Mail, da Ihr Unternehmen online öffentlich verzeichnet ist.<br>
-  <a href="http://localhost:5001/unsubscribe?email={email}" 
+  <a href="{website}/unsubscribe?email={email}" 
      style="color: #999;">Keine weiteren E-Mails erhalten</a>
 </p>
 </body>
@@ -287,7 +287,7 @@ Web: {website}
 Terminbuchung: {calendly}
 
 ---
-Abmelden: http://localhost:5001/unsubscribe?email={email}
+Abmelden: {website}/unsubscribe?email={email}
 """
 
     return {
